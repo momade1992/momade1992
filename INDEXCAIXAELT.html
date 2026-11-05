@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Caixa Eletrônica (ATM) Exercicio ALP</title>
+  <style>
+    /* ==========================================================================
+       1. VARIÁVEIS DE ESTILO CSS
+       ========================================================================== */
+    :root {
+      --bg-body: #f8fafc;
+      --atm-body: #1e293b;
+      --atm-border: #334155;
+      --screen-bg: #f8fafc;
+      --screen-text: #38bdf8;
+      --screen-border: #1e293b;
+      --btn-bg: #334155;
+      --btn-text: #f8fafc;
+      --btn-hover: #475569;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-yellow: #eab308;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ==========================================================================
+       2. ESTRUTURA E LAYOUT DO ATM
+       ========================================================================== */
+    .atm-container {
+      background-color: var(--atm-body);
+      border: 10px solid var(--atm-border);
+      border-radius: 10px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 10px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .atm-header {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      color: #94a3b8;
+    }
+
+    /* Tela Digital */
+    .atm-screen {
+      background-color: var(--screen-bg);
+      border: 0px solid var(--screen-border);
+      border-radius: 10px;
+      padding: 15px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--screen-text);
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+      margin-bottom: 20px;
+    }
+
+    .screen-header {
+      font-size: 0.9rem;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .screen-body {
+      margin: 0px 0;
+      text-align: center;
+    }
+
+    .screen-title {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #94a3b8;
+    }
+
+    .screen-message {
+      font-size: 1rem;
+      color: #94a3b8;
+      word-break: break-word;
+    }
+
+    .pin-display {
+      font-size: 2rem;
+      letter-spacing: 10px;
+      margin-top: 10px;
+      color: var(--accent-yellow);
+    }
+
+    /* Teclado Numérico */
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      background-color: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      padding: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:hover {
+      background-color: var(--btn-hover);
+    }
+
+    /* Botões de Ação */
+    .btn-cancel { background-color: var(--accent-red); color: white; }
+    .btn-clear { background-color: var(--accent-yellow); color: white; }
+    .btn-enter { background-color: var(--accent-green); color: white; }
+
+    .btn-cancel:hover { background-color: #dc2626; }
+    .btn-clear:hover { background-color: #ca8a04; }
+    .btn-enter:hover { background-color: #16a34a; }
+
+    /* Entradas Físicas (Simulação de Saída de Dinheiro) */
+    .slots-container {
+      border-top: 2px solid var(--atm-border);
+      padding-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .slot {
+      background: #0f172a;
+      border: 1px solid var(--atm-border);
+      height: 12px;
+      border-radius: 6px;
+      position: relative;
+    }
+
+    .slot-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-align: center;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="atm-container">
+    <div class="atm-header">SIMULAÇÃO CAIXA ELETRÓNICA-ATM</div>
+
+    <!-- TELA DO ATM -->
+    <div class="atm-screen">
+      <div class="screen-header">
+        <span>STATUS: ONLINE</span>
+        <span id="screen-date">--/--/----</span>
+      </div>
+      
+      <div class="screen-body">
+        <div id="screen-title" class="screen-title">BEM-VINDO</div>
+        <div id="screen-msg" class="screen-message">Digite seu PIN para acessar</div>
+        <div id="pin-display" class="pin-display">----</div>
+      </div>
+
+      <div style="font-size: 0.8rem; text-align: center; color: #64748b;">
+        Pressione [INTER] para confirmar
+      </div>
+    </div>
+
+    <!-- TECLADO NUMÉRICO E AÇÕES -->
+    <div class="keypad">
+      <button class="btn" onclick="pressKey('1')">1</button>
+      <button class="btn" onclick="pressKey('2')">2</button>
+      <button class="btn" onclick="pressKey('3')">3</button>
+      
+      <button class="btn" onclick="pressKey('4')">4</button>
+      <button class="btn" onclick="pressKey('5')">5</button>
+      <button class="btn" onclick="pressKey('6')">6</button>
+      
+      <button class="btn" onclick="pressKey('7')">7</button>
+      <button class="btn" onclick="pressKey('8')">8</button>
+      <button class="btn" onclick="pressKey('9')">9</button>
+      
+      <button class="btn btn-cancel" onclick="handleCancel()">CANCELAR</button>
+      <button class="btn" onclick="pressKey('0')">0</button>
+      <button class="btn btn-clear" onclick="handleClear()">CORRIGIR</button>
+    </div>
+
+    <button class="btn btn-enter" style="width: 100%; margin-bottom: 15px;" onclick="handleEnter()">ENTER</button>
+
+    <!-- SLOTS FÍSICOS (ESTÉTICO) -->
+    <div class="slots-container">
+      <div>
+        <div class="slot"></div>
+        <div class="slot-label">IMPRESSÃO DE CEDULAS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LÓGICA JAVASCRIPT -->
+  <script>
+    /* ==========================================================================
+       3. ESTADO E DADOS DO SISTEMA BANCÁRIO
+       ========================================================================== */
+    const accountData = {
+      pin: "1234",
+      balance: 1000.00,
+      authenticated: false,
+      currentStep: "PIN_ENTRY" // PIN_ENTRY, MENU, WITHDRAW, DEPOSIT
+    };
+
+    let inputBuffer = "";
+
+    // Elementos do DOM
+    const elTitle = document.getElementById("screen-title");
+    const elMsg = document.getElementById("screen-msg");
+    const elPinDisplay = document.getElementById("pin-display");
+    const elDate = document.getElementById("screen-date");
+
+    // Inicialização
+    elDate.innerText = new Date().toLocaleDateString('pt-BR');
+
+    /* ==========================================================================
+       4. LÓGICA DAS TECLAS E NAVEGAÇÃO
+       ========================================================================== */
+    function pressKey(num) {
+      if (inputBuffer.length < 6) {
+        inputBuffer += num;
+        updateDisplay();
+      }
+    }
+
+    function handleClear() {
+      inputBuffer = "";
+      updateDisplay();
+    }
+
+    function handleCancel() {
+      inputBuffer = "";
+      accountData.authenticated = false;
+      accountData.currentStep = "PIN_ENTRY";
+      renderScreen("BEM-VINDO", "Digite seu PIN de acesso");
+    }
+
+    function handleEnter() {
+      switch (accountData.currentStep) {
+        case "PIN_ENTRY":
+          if (inputBuffer === accountData.pin) {
+            accountData.authenticated = true;
+            accountData.currentStep = "MENU";
+            inputBuffer = "";
+            renderMenu();
+          } else {
+            inputBuffer = "";
+            renderScreen("ERRO", "PIN Incorreto. Tente novamente.");
+          }
+          break;
+
+        case "MENU":
+          processMenuOption(inputBuffer);
+          inputBuffer = "";
+          break;
+
+        case "WITHDRAW":
+          processWithdraw(parseFloat(inputBuffer));
+          inputBuffer = "";
+          break;
+
+        case "DEPOSIT":
+          processDeposit(parseFloat(inputBuffer));
+          inputBuffer = "";
+          break;
+      }
+    }
+
+    /* ==========================================================================
+       5. REGRAS DE NEGÓCIO BANCÁRIOS
+       ========================================================================== */
+    function renderMenu() {
+      renderScreen(
+        "MENU PRINCIPAL", 
+        "1: Saldo | 2: Levantar | 3: Depósito | 4: Sair"
+      );
+    }
+
+    function processMenuOption(option) {
+      if (option === "1") {
+        renderScreen("SALDO", `Saldo Atual: MT ${accountData.balance.toFixed(2)}`);
+      } else if (option === "2") {
+        accountData.currentStep = "WITHDRAW";
+        renderScreen("LEVANTAR", "Digite o valor a levntar e em seguida pressione ENTER :");
+      } else if (option === "3") {
+        accountData.currentStep = "DEPOSIT";
+        renderScreen("DEPÓSITO", "Digite o valor a depositar em seguida pressione ENTER:");
+      } else if (option === "4") {
+        handleCancel();
+      } else {
+        renderScreen("OPÇÃO INVÁLIDA", "1: Saldo | 2: Levantar | 3: Depósito | 4: Sair");
+      }
+    }
+
+    function processWithdraw(amount) {
+      if (isNaN(amount) || amount <= 0) {
+        renderScreen("ERRO", "Valor inválido. Tente novamente.");
+        return;
+      }
+      if (amount > accountData.balance) {
+        renderScreen("ERRO", "Saldo insuficiente!");
+      } else {
+        accountData.balance -= amount;
+        renderScreen("SUCESSO", `Levantamento de ${amount.toFixed(2)} MT realizado com sucesso!`);
+        accountData.currentStep = "MENU";
+      }
+    }
+
+    function processDeposit(amount) {
+      if (isNaN(amount) || amount <= 0) {
+        renderScreen("ERRO", "Valor inválido. Tente novamente.");
+        return;
+      }
+      accountData.balance += amount;
+      renderScreen("SUCESSO", `Depósito de ${amount.toFixed(2)} MT realizado com sucesso!`);
+      accountData.currentStep = "MENU";
+    }
+
+    /* ==========================================================================
+       6. ATUALIZAÇÃO DA TELA
+       ========================================================================== */
+    function renderScreen(title, message) {
+      elTitle.innerText = title;
+      elMsg.innerText = message;
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      if (accountData.currentStep === "PIN_ENTRY") {
+        elPinDisplay.innerText = "*".repeat(inputBuffer.length);
+      } else {
+        elPinDisplay.innerText = inputBuffer;
+      }
+    }
+  </script>
+</body>
+</html>
